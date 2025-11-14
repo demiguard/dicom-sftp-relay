@@ -5,7 +5,7 @@ import pandas
 from pydicom import Dataset
 
 from pynetdicom.ae import ApplicationEntity as AE
-from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelMove, StudyRootQueryRetrieveInformationModelFind
+from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelMove, StudyRootQueryRetrieveInformationModelFind # type: ignore
 
 AE_TITLE = "LIGHTHOUSE"
 

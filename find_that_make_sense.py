@@ -1,4 +1,4 @@
-from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelFind, PatientRootQueryRetrieveInformationModelFind
+from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelFind, PatientRootQueryRetrieveInformationModelFind # type: ignore
 
 import datetime
 from lib import get_cpr, get_ae, associate, get_baseline_find_dataset

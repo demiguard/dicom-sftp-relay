@@ -1,36 +1,110 @@
-from pathlib import Path
-import os
+#!/usr/bin/env python3
 
-from pydicom import dcmwrite
+# Python standard library
+import argparse
+import json
+from io import BytesIO, IOBase
+import os
+from pathlib import Path
+
+# Third party modules
+from paramiko import client
+
+from pydicom import Dataset, dcmwrite
 
 from pynetdicom import evt
 from pynetdicom.ae import ApplicationEntity
 from pynetdicom.presentation import AllStoragePresentationContexts, VerificationPresentationContexts
 
-ae = ApplicationEntity(ae_title="LIGHTHOUSE")
+# Internal modules
 
+
+# Parsing
+required_config_keys = [
+  'ae_title'
+  'port',
+  'sftp-host',
+  'sftp-port',
+  'sftp-username',
+  'sftp-password',
+  'remote-directory-name'
+]
+
+joined_keys = "\n".join(required_config_keys)
+
+parser = argparse.ArgumentParser(
+  prog="dicom-sftp-server",
+  usage="dicom-sftp-server config.json",
+  description="this program opens the server, that PACS can export data to. It'll forward the data to an sftp server")
+
+parser.add_argument('config', type=Path, help=f"Path to json configuration file. The JSON file must have:\n{joined_keys}")
+
+args = parser.parse_args()
+
+config_path: Path = args.config
+
+if not config_path.exists():
+  raise Exception(f"Config path: {config_path.absolute()} doesn't exists!")
+
+try:
+  with config_path.open("r") as config_fp:
+    config = json.loads(config_fp.read())
+except Exception as exp:
+  print("Config wasn't a JSON file")
+  raise exp
+
+
+for required_key in required_config_keys:
+  if required_key not in config:
+    raise Exception(f"{required_key} is missing from the config")
+
+ae_title      = config['ae-title']
+port          = config['port']
+sftp_host       = config['sftp-host']
+sftp_port     = config['sftp-port']
+sftp_username = config['sftp-username']
+sftp_password = config['sftp-password']
+remote_directory_name = config['remote-directory-name']
+
+ae = ApplicationEntity(ae_title=ae_title)
 ae.supported_contexts = AllStoragePresentationContexts + VerificationPresentationContexts
 
+ssh_client = client.SSHClient()
+
+# Throws if unable to connect
+ssh_client.connect(
+  hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
+)
+sftp_client = ssh_client.open_sftp()
+
+sftp_client.mkdir(remote_directory_name)
+
+def get_file_path_for_dataset(dataset: Dataset) -> Path:
+  return Path(remote_directory_name) / str(dataset.PatientID) / (str(dataset.InstanceNumber) + '.dcm')
+
 def handle_store(event):
-  dataset = event.dataset
+  dataset: Dataset = event.dataset
   dataset.file_meta = event.file_meta
 
-  ds_dir_path = Path(os.getcwd()) / str(dataset.StudyInstanceUID) / str(dataset.SeriesInstanceUID)
-  ds_dir_path.mkdir(parents=True, exist_ok=True)
+  dataset_path = get_file_path_for_dataset(dataset)
+  sftp_client.mkdir(str(dataset_path.parent))
 
-  ds_file_path = ds_dir_path / (str(dataset.InstanceNumber)+".dcm")
-
-  dcmwrite(ds_file_path, dataset, False)
-  #print(f"saved {ds_file_path}")
+  dicom_bytes = BytesIO()
+  dcmwrite(dicom_bytes, dataset, False)
+  sftp_client.putfo(dicom_bytes, str(dataset_path))
 
   return 0x0000
 
 print("Opening server")
 
-ae.start_server(
-  ('0.0.0.0', 11112),
+try:
+  ae.start_server(
+    ('0.0.0.0', 11112),
 
-  evt_handlers=[
-     (evt.EVT_C_STORE, handle_store)
-   ]
-)
+    evt_handlers=[
+       (evt.EVT_C_STORE, handle_store)
+     ]
+  )
+finally:
+  sftp_client.close()
+  ssh_client.close()

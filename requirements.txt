@@ -1,3 +1,4 @@
+pandas
 pydicom
 pynetdicom
 paramiko
