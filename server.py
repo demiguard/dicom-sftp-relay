@@ -17,7 +17,7 @@ from pynetdicom.ae import ApplicationEntity
 from pynetdicom.presentation import AllStoragePresentationContexts, VerificationPresentationContexts
 
 # Internal modules
-
+from lib import get_config
 
 # Parsing
 required_config_keys = [
@@ -41,22 +41,7 @@ parser.add_argument('config', type=Path, help=f"Path to json configuration file.
 
 args = parser.parse_args()
 
-config_path: Path = args.config
-
-if not config_path.exists():
-  raise Exception(f"Config path: {config_path.absolute()} doesn't exists!")
-
-try:
-  with config_path.open("r") as config_fp:
-    config = json.loads(config_fp.read())
-except Exception as exp:
-  print("Config wasn't a JSON file")
-  raise exp
-
-
-for required_key in required_config_keys:
-  if required_key not in config:
-    raise Exception(f"{required_key} is missing from the config")
+config = get_config(args.config, required_config_keys)
 
 ae_title      = config['ae-title']
 port          = config['port']
@@ -95,7 +80,7 @@ def handle_store(event):
 
   return 0x0000
 
-print("Opening server")
+print(f"Opening server for ae: {ae_title}")
 
 try:
   ae.start_server(
