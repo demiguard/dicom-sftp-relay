@@ -88,7 +88,7 @@ def handle_store(event):
   dataset: Dataset = event.dataset
   dataset.file_meta = event.file_meta
   try:
-    new_patient_id = mapping[dataset.PatientID.value]
+    new_patient_id = mapping[str(dataset.PatientID)]
     dataset.PatientID = new_patient_id
     dataset.PatientName = new_patient_id
   except Exception as e:
