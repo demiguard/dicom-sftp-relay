@@ -86,7 +86,6 @@ def get_file_path_for_dataset(dataset: Dataset) -> Path:
 def handle_store(event):
   sftp_client = ssh_client.open_sftp()
   event_start_time =datetime.datetime.now()
-  print(f"Got event at {event_start_time}")
   dataset: Dataset = event.dataset
   dataset.file_meta = event.file_meta
 
@@ -108,7 +107,6 @@ def handle_store(event):
   dcmwrite(dicom_bytes, dataset, False)
 
   sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
-  print(f"Saved Dataset from {event_start_time} at {datetime.datetime.now()}")
   sftp_client.close()
 
   return 0x0000
