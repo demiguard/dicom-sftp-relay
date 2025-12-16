@@ -50,5 +50,11 @@ ssh_client.connect(
 )
 sftp_client = ssh_client.open_sftp()
 
+files = sftp_client.listdir('.')
+
+print(f"found {len(files)} files:")
+for file_name in files:
+  print(files)
+
 sftp_client.close()
 ssh_client.close()
