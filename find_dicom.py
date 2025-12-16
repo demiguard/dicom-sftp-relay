@@ -26,7 +26,7 @@ args = parser.parse_args()
 config = get_config(args.config_path, required_config_keys)
 
 ae_title = config['ae-title']
-data_path = config['data_file']
+data_path = config['data-file']
 cpr_key = config['patient-id-key']
 
 patient_data = get_cpr(data_path, cpr_key)
