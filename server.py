@@ -83,8 +83,10 @@ def get_file_path_for_dataset(dataset: Dataset) -> Path:
   return Path(remote_directory_name) / str(dataset.PatientID) / (str(dataset.SOPInstanceUID) + '.dcm')
 
 def handle_store(event):
+  print("Got event")
   dataset: Dataset = event.dataset
   dataset.file_meta = event.file_meta
+
   try:
     new_patient_id = mapping[str(dataset.PatientID)]
     dataset.PatientID = new_patient_id
