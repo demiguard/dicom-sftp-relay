@@ -87,8 +87,8 @@ def handle_store(event):
   dataset: Dataset = event.dataset
   dataset.file_meta = event.file_meta
   try:
-    new_patient_id = mapping[dataset.PatientID]
-  except:
+    new_patient_id = mapping[dataset.PatientID.value]
+  except Exception as e:
     print("Missing Patient ID!")
     return 0x0000
 
