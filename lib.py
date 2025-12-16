@@ -34,7 +34,7 @@ def get_ae(AE_TITLE):
   return ae
 
 @contextlib.contextmanager
-def associate(ae) -> Generator[Association]:
+def associate(ae) -> Generator[Association, None, None]:
   assoc = ae.associate(
     PACS_IP,
     PACS_PORT,
