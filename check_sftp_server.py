@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 # Third party modules
+import paramiko
 from paramiko import client
 
 from pydicom import Dataset, dcmwrite
@@ -43,6 +44,7 @@ sftp_username = config['sftp-username']
 sftp_password = config['sftp-password']
 
 ssh_client = client.SSHClient()
+ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 ssh_client.connect(
   hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
 )

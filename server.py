@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 # Third party modules
+import paramiko
 from paramiko import client
 
 from pydicom import Dataset, dcmwrite
@@ -55,11 +56,13 @@ ae = ApplicationEntity(ae_title=ae_title)
 ae.supported_contexts = AllStoragePresentationContexts + VerificationPresentationContexts
 
 ssh_client = client.SSHClient()
+ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 # Throws if unable to connect
 ssh_client.connect(
   hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
 )
+
 sftp_client = ssh_client.open_sftp()
 
 sftp_client.mkdir(remote_directory_name)
