@@ -104,7 +104,8 @@ def handle_store(event):
 
   dicom_bytes = BytesIO()
   dcmwrite(dicom_bytes, dataset, False)
-  sftp_client.putfo(dicom_bytes, str(dataset_path))
+  print(f"Writting files at {datetime.datetime.now()}")
+  sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
   print(f"Saved Dataset at {datetime.datetime.now()}")
 
   return 0x0000
