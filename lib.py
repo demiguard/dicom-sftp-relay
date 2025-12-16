@@ -51,7 +51,7 @@ def get_baseline_query_dataset():
   ds = Dataset()
   ds.SpecificCharacterSet = 'ISO_IR 100'
   ds.QueryRetrieveLevel = "STUDY"
-  #ds.Modality = "CT"
+  ds.Modality = "CT"
 
   ds.StudyInstanceUID = ''
   ds.StudyDate = ''
