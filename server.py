@@ -61,6 +61,7 @@ remote_directory_name = config['remote-directory-name']
 df = get_cpr(Path(data_file), cpr_key)
 mapping = build_mapping(df, cpr_key, anno_key)
 
+print(mapping)
 
 ae = ApplicationEntity(ae_title=ae_title)
 ae.supported_contexts = AllStoragePresentationContexts + VerificationPresentationContexts
@@ -88,12 +89,11 @@ def handle_store(event):
   dataset.file_meta = event.file_meta
   try:
     new_patient_id = mapping[dataset.PatientID.value]
+    dataset.PatientID = new_patient_id
+    dataset.PatientName = new_patient_id
   except Exception as e:
-    print("Missing Patient ID!")
+    print(f"Missing Patient ID: {dataset.PatientID}")
     return 0x0000
-
-  dataset.PatientID = new_patient_id
-  dataset.PatientName = new_patient_id
 
   dataset_path = get_file_path_for_dataset(dataset)
   try:
