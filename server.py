@@ -65,7 +65,10 @@ ssh_client.connect(
 
 sftp_client = ssh_client.open_sftp()
 
-sftp_client.mkdir(remote_directory_name)
+try:
+  sftp_client.mkdir(remote_directory_name)
+except OSError:
+  pass
 
 def get_file_path_for_dataset(dataset: Dataset) -> Path:
   return Path(remote_directory_name) / str(dataset.PatientID) / (str(dataset.InstanceNumber) + '.dcm')
@@ -75,7 +78,10 @@ def handle_store(event):
   dataset.file_meta = event.file_meta
 
   dataset_path = get_file_path_for_dataset(dataset)
-  sftp_client.mkdir(str(dataset_path.parent))
+  try:
+    sftp_client.mkdir(str(dataset_path.parent))
+  except OSError:
+    pass
 
   dicom_bytes = BytesIO()
   dcmwrite(dicom_bytes, dataset, False)
