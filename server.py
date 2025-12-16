@@ -71,7 +71,7 @@ except OSError:
   pass
 
 def get_file_path_for_dataset(dataset: Dataset) -> Path:
-  return Path(remote_directory_name) / str(dataset.PatientID) / (str(dataset.InstanceNumber) + '.dcm')
+  return Path(remote_directory_name) / str(dataset.PatientID) / (str(dataset.SOPInstanceUID) + '.dcm')
 
 def handle_store(event):
   dataset: Dataset = event.dataset

@@ -4,6 +4,7 @@
 import argparse
 import json
 import datetime
+from pathlib import Path
 
 # Third party modules
 from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelMove # type: ignore
@@ -17,9 +18,9 @@ required_config_keys = [
   'server-ae-title'
 ]
 
-parser = argparse.ArgumentParser("find_dicom", usage="find_dicom config.json")
+parser = argparse.ArgumentParser("find_dicom", usage="move_dicom config.json", )
 
-parser.add_argument('config_path', help="Path to ")
+parser.add_argument('config_path', help="Path to config", type=Path)
 
 args = parser.parse_args()
 
@@ -43,4 +44,7 @@ with associate(ae) as assoc:
     response = assoc.send_c_move(ds, server_ae, StudyRootQueryRetrieveInformationModelMove)
 
     for (status, b) in response:
-      pass
+      if 'Status' in status:
+        print(hex(status.Status))
+
+    print(f"Moved {ds.PatientID}")
