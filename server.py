@@ -5,6 +5,7 @@ import argparse
 import json
 from io import BytesIO, IOBase
 import os
+import datetime
 from pathlib import Path
 
 # Third party modules
@@ -83,7 +84,7 @@ def get_file_path_for_dataset(dataset: Dataset) -> Path:
   return Path(remote_directory_name) / str(dataset.PatientID) / (str(dataset.SOPInstanceUID) + '.dcm')
 
 def handle_store(event):
-  print("Got event")
+  print(f"Got event at {datetime.datetime.now()}")
   dataset: Dataset = event.dataset
   dataset.file_meta = event.file_meta
 
@@ -104,7 +105,7 @@ def handle_store(event):
   dicom_bytes = BytesIO()
   dcmwrite(dicom_bytes, dataset, False)
   sftp_client.putfo(dicom_bytes, str(dataset_path))
-  print("Saved Dataset")
+  print(f"Saved Dataset at {datetime.datetime.now()}")
 
   return 0x0000
 
