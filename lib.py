@@ -64,7 +64,7 @@ def get_baseline_query_dataset():
 def build_mapping(df: pandas.DataFrame, cpr_key, anno_key):
   mapping = {}
   for x, row in df.iterrows():
-    mapping[cpr_key] = row[anno_key]
+    mapping[row[cpr_key]] = row[anno_key]
 
   return mapping
 
