@@ -22,7 +22,7 @@ from lib import get_config
 
 # Parsing
 required_config_keys = [
-  'ae_title',
+  'ae-title',
   'port',
   'sftp-host',
   'sftp-port',
