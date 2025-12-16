@@ -12,7 +12,7 @@ from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelFind, Pat
 from lib import get_cpr, get_ae, associate, get_baseline_query_dataset, get_config
 
 required_config_keys = [
-  'ae-title'
+  'ae-title',
   'data-file',
   'patient-id-key'
 ]
