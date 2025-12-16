@@ -84,7 +84,8 @@ def get_file_path_for_dataset(dataset: Dataset) -> Path:
   return Path(remote_directory_name) / str(dataset.PatientID) / (str(dataset.SOPInstanceUID) + '.dcm')
 
 def handle_store(event):
-  print(f"Got event at {datetime.datetime.now()}")
+  event_start_time =datetime.datetime.now()
+  print(f"Got event at {event_start_time}")
   dataset: Dataset = event.dataset
   dataset.file_meta = event.file_meta
 
@@ -104,9 +105,9 @@ def handle_store(event):
 
   dicom_bytes = BytesIO()
   dcmwrite(dicom_bytes, dataset, False)
-  print(f"Writting files at {datetime.datetime.now()}")
+
   sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
-  print(f"Saved Dataset at {datetime.datetime.now()}")
+  print(f"Saved Dataset from {event_start_time} at {datetime.datetime.now()}")
 
   return 0x0000
 
