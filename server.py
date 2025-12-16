@@ -18,7 +18,7 @@ from pynetdicom.ae import ApplicationEntity
 from pynetdicom.presentation import AllStoragePresentationContexts, VerificationPresentationContexts
 
 # Internal modules
-from lib import get_config
+from lib import get_config, build_mapping, get_cpr
 
 # Parsing
 required_config_keys = [
@@ -28,7 +28,10 @@ required_config_keys = [
   'sftp-port',
   'sftp-username',
   'sftp-password',
-  'remote-directory-name'
+  'remote-directory-name',
+  'data-file',
+  'patient-id-key',
+  'anno-name-key'
 ]
 
 joined_keys = "\n".join(required_config_keys)
@@ -50,7 +53,14 @@ sftp_host       = config['sftp-host']
 sftp_port     = config['sftp-port']
 sftp_username = config['sftp-username']
 sftp_password = config['sftp-password']
+data_file = config['data-file']
+cpr_key = config['patient-id-key']
+anno_key = config['anno-name-key']
 remote_directory_name = config['remote-directory-name']
+
+df = get_cpr(Path(data_file), cpr_key)
+mapping = build_mapping(df, cpr_key, anno_key)
+
 
 ae = ApplicationEntity(ae_title=ae_title)
 ae.supported_contexts = AllStoragePresentationContexts + VerificationPresentationContexts
@@ -76,6 +86,14 @@ def get_file_path_for_dataset(dataset: Dataset) -> Path:
 def handle_store(event):
   dataset: Dataset = event.dataset
   dataset.file_meta = event.file_meta
+  try:
+    new_patient_id = mapping[dataset.PatientID]
+  except:
+    print("Missing Patient ID!")
+    return 0x0000
+
+  dataset.PatientID = new_patient_id
+  dataset.PatientName = new_patient_id
 
   dataset_path = get_file_path_for_dataset(dataset)
   try:

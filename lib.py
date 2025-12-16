@@ -61,6 +61,13 @@ def get_baseline_query_dataset():
 
   return ds
 
+def build_mapping(df: pandas.DataFrame, cpr_key, anno_key):
+  mapping = {}
+  for x, row in df.iterrows():
+    mapping[cpr_key] = row[anno_key]
+
+  return mapping
+
 
 def get_config(config_path: Path, required_config_keys: List[str]):
   if not config_path.exists():
