@@ -29,7 +29,7 @@ def get_cpr(data_path: Path, cpr_key):
 def get_ae(AE_TITLE):
   ae = AE(ae_title=AE_TITLE)
   ae.add_requested_context(StudyRootQueryRetrieveInformationModelFind)
-  ae.add_requested_context(StudyRootQueryRetrieveInformationModelFind)
+  ae.add_requested_context(StudyRootQueryRetrieveInformationModelMove)
 
   return ae
 
