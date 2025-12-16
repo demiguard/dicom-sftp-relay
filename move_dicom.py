@@ -44,7 +44,6 @@ with associate(ae) as assoc:
     response = assoc.send_c_move(ds, server_ae, StudyRootQueryRetrieveInformationModelMove)
 
     for (status, b) in response:
-      if 'Status' in status:
-        print(hex(status.Status))
+      print(status)
 
     print(f"Moved {ds.PatientID}")

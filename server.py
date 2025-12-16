@@ -61,8 +61,6 @@ remote_directory_name = config['remote-directory-name']
 df = get_cpr(Path(data_file), cpr_key)
 mapping = build_mapping(df, cpr_key, anno_key)
 
-print(mapping)
-
 ae = ApplicationEntity(ae_title=ae_title)
 ae.supported_contexts = AllStoragePresentationContexts + VerificationPresentationContexts
 
@@ -104,6 +102,7 @@ def handle_store(event):
   dicom_bytes = BytesIO()
   dcmwrite(dicom_bytes, dataset, False)
   sftp_client.putfo(dicom_bytes, str(dataset_path))
+  print("Saved Dataset")
 
   return 0x0000
 
