@@ -4,7 +4,7 @@
 import argparse
 import json
 import datetime
-
+from pathlib import Path
 # Third party modules
 from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelFind, PatientRootQueryRetrieveInformationModelFind # type: ignore
 
@@ -19,7 +19,7 @@ required_config_keys = [
 
 parser = argparse.ArgumentParser("find_dicom", usage="find_dicom config.json")
 
-parser.add_argument('config_path', help="Path to ")
+parser.add_argument('config_path', help="Path to config", type=Path)
 
 args = parser.parse_args()
 
