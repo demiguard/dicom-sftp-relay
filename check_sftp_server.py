@@ -18,16 +18,13 @@ from lib import get_config
 
 # Parsing
 required_config_keys = [
-  'ae_title'
-  'port',
   'sftp-host',
   'sftp-port',
   'sftp-username',
   'sftp-password',
-  'remote-directory-name'
 ]
 
-joined_keys = "\n".join(required_config_keys)
+joined_keys = " ".join(required_config_keys)
 
 parser = argparse.ArgumentParser(
   prog="check-sftp-server",
@@ -40,7 +37,7 @@ args = parser.parse_args()
 
 config = get_config(args.config, required_config_keys)
 
-sftp_host       = config['sftp-host']
+sftp_host     = config['sftp-host']
 sftp_port     = config['sftp-port']
 sftp_username = config['sftp-username']
 sftp_password = config['sftp-password']
