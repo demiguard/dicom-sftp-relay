@@ -84,6 +84,7 @@ def get_file_path_for_dataset(dataset: Dataset) -> Path:
   return Path(remote_directory_name) / str(dataset.PatientID) / (str(dataset.SOPInstanceUID) + '.dcm')
 
 def handle_store(event):
+  sftp_client = ssh_client.open_sftp()
   event_start_time =datetime.datetime.now()
   print(f"Got event at {event_start_time}")
   dataset: Dataset = event.dataset
@@ -108,6 +109,7 @@ def handle_store(event):
 
   sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
   print(f"Saved Dataset from {event_start_time} at {datetime.datetime.now()}")
+  sftp_client.close()
 
   return 0x0000
 
@@ -122,5 +124,4 @@ try:
      ]
   )
 finally:
-  sftp_client.close()
   ssh_client.close()
