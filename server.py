@@ -105,6 +105,7 @@ def handle_store(event):
 
   dicom_bytes = BytesIO()
   dcmwrite(dicom_bytes, dataset, False)
+  dicom_bytes.seek(0)
 
   sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
   sftp_client.close()
