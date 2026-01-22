@@ -107,7 +107,20 @@ def handle_store(event):
     sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
     sftp_client.close()
   except Exception as e:
-    print(e)
+    return 0x0000
+
+  dataset_path = get_file_path_for_dataset(dataset)
+  try:
+    sftp_client.mkdir(str(dataset_path.parent))
+  except OSError:
+    pass
+
+  dicom_bytes = BytesIO()
+  dcmwrite(dicom_bytes, dataset, False)
+  dicom_bytes.seek(0)
+
+  sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
+  sftp_client.close()
 
   return 0x0000
 
