@@ -14,6 +14,10 @@ from paramiko import client
 
 from pydicom import Dataset, dcmwrite
 
+#from pynetdicom import debug_logger
+
+#debug_logger()
+
 from pynetdicom import evt
 from pynetdicom.ae import ApplicationEntity
 from pynetdicom.presentation import AllStoragePresentationContexts, VerificationPresentationContexts
@@ -50,7 +54,7 @@ config = get_config(args.config, required_config_keys)
 
 ae_title      = config['ae-title']
 port          = config['port']
-sftp_host       = config['sftp-host']
+sftp_host     = config['sftp-host']
 sftp_port     = config['sftp-port']
 sftp_username = config['sftp-username']
 sftp_password = config['sftp-password']
@@ -60,7 +64,7 @@ anno_key = config['anno-name-key']
 remote_directory_name = config['remote-directory-name']
 
 df = get_cpr(Path(data_file), cpr_key)
-mapping = build_mapping(df, cpr_key, anno_key)
+#mapping = build_mapping(df, cpr_key, anno_key)
 
 ae = ApplicationEntity(ae_title=ae_title)
 ae.supported_contexts = AllStoragePresentationContexts + VerificationPresentationContexts
@@ -84,32 +88,31 @@ def get_file_path_for_dataset(dataset: Dataset) -> Path:
   return Path(remote_directory_name) / str(dataset.PatientID) / (str(dataset.SOPInstanceUID) + '.dcm')
 
 def handle_store(event):
-  sftp_client = ssh_client.open_sftp()
-  event_start_time =datetime.datetime.now()
-  dataset: Dataset = event.dataset
-  dataset.file_meta = event.file_meta
-
   try:
-    new_patient_id = mapping[str(dataset.PatientID)]
-    dataset.PatientID = new_patient_id
-    dataset.PatientName = new_patient_id
+    sftp_client = ssh_client.open_sftp()
+    event_start_time = datetime.datetime.now()
+    dataset: Dataset = event.dataset
+    dataset.file_meta = event.file_meta
+
+    dataset_path = get_file_path_for_dataset(dataset)
+    try:
+      sftp_client.mkdir(str(dataset_path.parent))
+    except OSError:
+      pass
+
+    dicom_bytes = BytesIO()
+    dcmwrite(dicom_bytes, dataset, False)
+    dicom_bytes.seek(0)
+
+    sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
+    sftp_client.close()
   except Exception as e:
-    print(f"Missing Patient ID: {dataset.PatientID}")
-    return 0x0000
-
-  dataset_path = get_file_path_for_dataset(dataset)
-  try:
-    sftp_client.mkdir(str(dataset_path.parent))
-  except OSError:
-    pass
-
-  dicom_bytes = BytesIO()
-  dcmwrite(dicom_bytes, dataset, False)
-
-  sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
-  sftp_client.close()
+    print(e)
 
   return 0x0000
+
+def handle_open(event):
+  print("Open assoc")
 
 print(f"Opening server for ae: {ae_title}")
 
@@ -118,7 +121,8 @@ try:
     ('0.0.0.0', 11112),
 
     evt_handlers=[
-       (evt.EVT_C_STORE, handle_store)
+       (evt.EVT_C_STORE, handle_store),
+#       (evt.EVT_ACCEPTED, handle_open)
      ]
   )
 finally:

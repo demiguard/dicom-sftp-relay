@@ -14,8 +14,7 @@ from lib import get_cpr, get_ae, associate, get_baseline_query_dataset, get_conf
 required_config_keys = [
   'ae-title',
   'data-file',
-  'patient-id-key',
-  'server-ae-title'
+  'patient-id-key'
 ]
 
 parser = argparse.ArgumentParser("find_dicom", usage="move_dicom config.json", )
@@ -26,15 +25,19 @@ args = parser.parse_args()
 
 config = get_config(args.config_path, required_config_keys)
 
+pacs_ip = config['pacs-ip']
+pacs_port = config['pacs-port']
+pacs_ae = config['pacs-ae']
+
 ae_title = config['ae-title']
 data_path = config['data-file']
 cpr_key = config['patient-id-key']
-server_ae = config['server-ae-title']
+server_ae = config['ae-title']
 
 patient_data = get_cpr(data_path, cpr_key)
 ae = get_ae(ae_title)
 
-with associate(ae) as assoc:
+with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
   for x,y in patient_data.iterrows():
     ds = get_baseline_query_dataset()
 

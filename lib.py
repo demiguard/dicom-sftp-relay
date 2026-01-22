@@ -13,7 +13,7 @@ from pynetdicom.association import Association
 from pynetdicom.ae import ApplicationEntity as AE
 from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelMove, StudyRootQueryRetrieveInformationModelFind # type: ignore
 
-
+# Heart PACS
 PACS_IP = "10.145.5.63"
 PACS_PORT = 7840
 PACS_AE = "DICOM_QR_SCP"
@@ -34,11 +34,11 @@ def get_ae(AE_TITLE):
   return ae
 
 @contextlib.contextmanager
-def associate(ae) -> Generator[Association, None, None]:
+def associate(ae, pacs_ip, pacs_port, pacs_ae) -> Generator[Association, None, None]:
   assoc: Association = ae.associate(
-    PACS_IP,
-    PACS_PORT,
-    ae_title=PACS_AE
+    pacs_ip,
+    pacs_port,
+    ae_title=pacs_ae
   )
   try:
     yield assoc

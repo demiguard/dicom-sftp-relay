@@ -25,6 +25,10 @@ args = parser.parse_args()
 
 config = get_config(args.config_path, required_config_keys)
 
+pacs_ip = config['pacs-ip']
+pacs_port = config['pacs-port']
+pacs_ae = config['pacs-ae']
+
 ae_title = config['ae-title']
 data_path = config['data-file']
 cpr_key = config['patient-id-key']
@@ -32,7 +36,7 @@ cpr_key = config['patient-id-key']
 patient_data = get_cpr(data_path, cpr_key)
 ae = get_ae(ae_title)
 
-with associate(ae) as assoc:
+with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
   for x,y in patient_data.iterrows():
     ds = get_baseline_query_dataset()
 
