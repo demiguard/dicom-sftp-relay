@@ -18,6 +18,12 @@ required_config_keys = [
   'server-ae-title'
 ]
 
+## MOVE THIS TO CONFIG
+PACS_IP = "10.145.5.63"
+PACS_PORT = 7840
+PACS_AE = "DICOM_QR_SCP"
+
+
 parser = argparse.ArgumentParser("find_dicom", usage="move_dicom config.json", )
 
 parser.add_argument('config_path', help="Path to config", type=Path)
@@ -40,6 +46,12 @@ with associate(ae) as assoc:
 
     ds.PatientID = getattr(y, cpr_key)
     #ds.StudyDate = datetime.datetime.strptime(y.ct_date, "%Y-%m-%d")
+    if not assoc.is_established:
+      assoc = ae.associate(
+        PACS_IP,
+        PACS_PORT,
+        ae_title=PACS_AE
+      )
 
     response = assoc.send_c_move(ds, server_ae, StudyRootQueryRetrieveInformationModelMove)
 
