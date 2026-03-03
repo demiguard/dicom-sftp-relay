@@ -86,3 +86,12 @@ def get_config(config_path: Path, required_config_keys: List[str]):
       raise Exception(f"{required_key} is missing from the config")
 
   return config
+
+def safe_del(dataset: Dataset, tag):
+  if tag in dataset:
+    del dataset[tag]
+
+def anonymise_dataset(dataset: Dataset):
+  safe_del(dataset, 0x0010_0010)
+  safe_del(dataset, 0x0010_1040)
+  safe_del(dataset, 0x0010_1002)

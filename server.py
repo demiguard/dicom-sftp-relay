@@ -23,7 +23,7 @@ from pynetdicom.ae import ApplicationEntity
 from pynetdicom.presentation import AllStoragePresentationContexts, VerificationPresentationContexts
 
 # Internal modules
-from lib import get_config, build_mapping, get_cpr
+from lib import get_config, build_mapping, get_cpr, anonymise_dataset
 
 # Parsing
 required_config_keys = [
@@ -99,6 +99,8 @@ def handle_store(event):
       sftp_client.mkdir(str(dataset_path.parent))
     except OSError:
       pass
+
+    anonymise_dataset(dataset)
 
     dicom_bytes = BytesIO()
     dcmwrite(dicom_bytes, dataset, False)
