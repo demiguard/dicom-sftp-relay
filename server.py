@@ -105,24 +105,18 @@ def handle_store(event):
     dicom_bytes = BytesIO()
     dcmwrite(dicom_bytes, dataset, False)
     dicom_bytes.seek(0)
+    try:
+      sftp_client.stat(str(dataset_path))
+    except IOError:
+      pass # File doesn't exists
+    else:
+      sftp_client.remove(str(dataset_path))
 
     sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
     sftp_client.close()
   except Exception as e:
-    return 0x0000
-
-  dataset_path = get_file_path_for_dataset(dataset)
-  try:
-    sftp_client.mkdir(str(dataset_path.parent))
-  except OSError:
-    pass
-
-  dicom_bytes = BytesIO()
-  dcmwrite(dicom_bytes, dataset, False)
-  dicom_bytes.seek(0)
-
-  sftp_client.putfo(dicom_bytes, str(dataset_path), confirm=False)
-  sftp_client.close()
+    print(f"Failed to store the dataset because: {e}")
+    return 0xC000
 
   return 0x0000
 
