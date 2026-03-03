@@ -120,8 +120,8 @@ def handle_store(event):
 
   return 0x0000
 
-def handle_open(event):
-  print("Open assoc")
+def handle_open(event: evt.Event):
+  print(f"Open assoc with {event.assoc.ae} ")
 
 print(f"Opening server for ae: {ae_title}")
 
@@ -131,7 +131,7 @@ try:
 
     evt_handlers=[
        (evt.EVT_C_STORE, handle_store),
-#       (evt.EVT_ACCEPTED, handle_open)
+       (evt.EVT_ACCEPTED, handle_open)
      ]
   )
 finally:
