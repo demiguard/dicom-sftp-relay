@@ -9,7 +9,7 @@ from pathlib import Path
 from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelFind, PatientRootQueryRetrieveInformationModelFind # type: ignore
 from pynetdicom import debug_logger
 
-from lib import get_cpr, get_ae, associate, get_baseline_query_dataset, get_config
+from lib import get_cpr, get_ae, associate, get_baseline_query_dataset, get_config, build_info_mapping
 
 required_config_keys = [
   'ae-title',
@@ -47,10 +47,15 @@ with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
     ds = get_baseline_query_dataset()
 
     ds.PatientID = getattr(y, cpr_key)
+    ds.StudyDate = getattr(y, 'ProcedureStartDate')
     #ds.StudyDate = datetime.datetime.strptime(y.ct_date, "%Y-%m-%d")
+
+    print(ds)
 
     response = assoc.send_c_find(ds, StudyRootQueryRetrieveInformationModelFind)
 
     for (status, b) in response:
       if b is not None and 'AccessionNumber' in b:
         print(b)
+
+    break

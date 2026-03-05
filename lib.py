@@ -69,6 +69,14 @@ def build_mapping(df: pandas.DataFrame, cpr_key, anno_key):
 
   return mapping
 
+def build_info_mapping(df: pandas.DataFrame, cpr_key):
+  mapping = {}
+
+  for x, row in df.iterrows():
+    mapping[row[cpr_key]] = row
+
+  return mapping
+
 
 def get_config(config_path: Path, required_config_keys: List[str]):
   if not config_path.exists():
