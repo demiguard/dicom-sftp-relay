@@ -7,7 +7,7 @@ import datetime
 from pathlib import Path
 # Third party modules
 from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelFind, PatientRootQueryRetrieveInformationModelFind # type: ignore
-
+from pynetdicom import debug_logger
 
 from lib import get_cpr, get_ae, associate, get_baseline_query_dataset, get_config
 
@@ -17,11 +17,17 @@ required_config_keys = [
   'patient-id-key'
 ]
 
+
+
 parser = argparse.ArgumentParser("find_dicom", usage="find_dicom config.json")
 
 parser.add_argument('config_path', help="Path to config", type=Path)
+parser.add_argument('--verbose', '-v', action='store_true')
 
 args = parser.parse_args()
+
+if args.verbose:
+  debug_logger()
 
 config = get_config(args.config_path, required_config_keys)
 
@@ -47,4 +53,4 @@ with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
 
     for (status, b) in response:
       if b is not None and 'AccessionNumber' in b:
-        print(f"Found: {b.AccessionNumber}")
+        print(b)

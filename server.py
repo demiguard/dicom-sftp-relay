@@ -64,7 +64,7 @@ anno_key = config['anno-name-key']
 remote_directory_name = config['remote-directory-name']
 
 df = get_cpr(Path(data_file), cpr_key)
-#mapping = build_mapping(df, cpr_key, anno_key)
+mapping = build_mapping(df, cpr_key, anno_key)
 
 ae = ApplicationEntity(ae_title=ae_title)
 ae.supported_contexts = AllStoragePresentationContexts + VerificationPresentationContexts
@@ -101,6 +101,9 @@ def handle_store(event):
       pass
 
     anonymise_dataset(dataset)
+    if dataset.PatientID not in mapping:
+       print(f"Patient ID: {dataset.PatientID} not in mapping")
+       return 0x0000
 
     dicom_bytes = BytesIO()
     dcmwrite(dicom_bytes, dataset, False)
