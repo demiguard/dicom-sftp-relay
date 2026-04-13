@@ -42,20 +42,38 @@ cpr_key = config['patient-id-key']
 patient_data = get_cpr(data_path, cpr_key)
 ae = get_ae(ae_title)
 
+max_queries = 500
+
+found = 0
+queries = 0
+
 with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
   for x,y in patient_data.iterrows():
     ds = get_baseline_query_dataset()
+    ds.PatientID = y[cpr_key]
+    ds.Modality = 'CT'
 
-    ds.PatientID = getattr(y, cpr_key)
-    ds.StudyDate = getattr(y, 'ProcedureStartDate')
+
+    if queries == 0:
+        print(ds)
+
+    #ds.Modality = "EPS"
+    #ds.StudyDate = "".join(getattr(y, 'ProcedureStartDate').split('-'))
     #ds.StudyDate = datetime.datetime.strptime(y.ct_date, "%Y-%m-%d")
 
-    print(ds)
-
     response = assoc.send_c_find(ds, StudyRootQueryRetrieveInformationModelFind)
+    queries += 1
+    has_found = False
 
     for (status, b) in response:
-      if b is not None and 'AccessionNumber' in b:
-        print(b)
+      if b is not None:
+        has_found = True
+    if has_found:
+      found += 1
 
-    break
+    #print(f"Found {ds.PatientID} - {has_found}")
+    if not (queries < max_queries):
+        break
+#    break
+
+print(f"found: {found} / {queries}")

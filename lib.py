@@ -20,10 +20,9 @@ PACS_AE = "DICOM_QR_SCP"
 
 def get_cpr(data_path: Path, cpr_key):
   if str(data_path).endswith('tsv'):
-    return pandas.read_csv(data_path, sep='\t', dtype={ cpr_key : str})
+    return pandas.read_csv(data_path, sep='\t', dtype={ cpr_key : str })
   else:
-    return pandas.read_csv(data_path, dtype={ cpr_key : str})
-
+    return pandas.read_csv(data_path, sep=';',  dtype={ cpr_key : str })
 
 
 def get_ae(AE_TITLE):
@@ -51,7 +50,8 @@ def get_baseline_query_dataset():
   ds = Dataset()
   ds.SpecificCharacterSet = 'ISO_IR 100'
   ds.QueryRetrieveLevel = "STUDY"
-  ds.Modality = "CT"
+  ds.Modality = ""
+  #ds.Modality = "CT"
 
   ds.StudyInstanceUID = ''
   ds.StudyDate = ''

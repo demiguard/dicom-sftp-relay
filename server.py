@@ -105,6 +105,9 @@ def handle_store(event):
        print(f"Patient ID: {dataset.PatientID} not in mapping")
        return 0x0000
 
+    dataset.PatientID = mapping[dataset.PatientID]
+
+
     dicom_bytes = BytesIO()
     dcmwrite(dicom_bytes, dataset, False)
     dicom_bytes.seek(0)
