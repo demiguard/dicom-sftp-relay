@@ -5,6 +5,7 @@ import argparse
 import json
 import datetime
 from pathlib import Path
+import traceback
 
 # Third party modules
 import time
@@ -138,6 +139,7 @@ try:
 except Exception as E:
   handled_patients = max(0, handled_patients - 1)
   print(f"Unexpected exit! - {E}")
+  print(traceback.format_exc())
 finally:
   ssh_client.close()
 
