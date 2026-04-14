@@ -104,15 +104,11 @@ def handle_store(event):
        return 0x0000
     dataset.PatientID = mapping[cpr]
 
-
     dataset_path = get_file_path_for_dataset(dataset)
     try:
       sftp_client.mkdir(str(dataset_path.parent))
     except OSError:
       pass
-
-
-    dataset.PatientID = mapping[dataset.PatientID]
 
 
     dicom_bytes = BytesIO()
