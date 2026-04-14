@@ -135,9 +135,9 @@ try:
       c_move_time.append(end - start)
 
 
-except Exception:
+except Exception as E:
   handled_patients = max(0, handled_patients - 1)
-  print("Unexpected exit! ")
+  print(f"Unexpected exit! - {E}")
 finally:
   ssh_client.close()
 
