@@ -88,7 +88,9 @@ c_move_time = []
 
 try:
   with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
-    for x, cpr in patient_data_frame.iterrows():
+    for x, row in patient_data_frame.iterrows():
+      cpr = getattr(row, cpr_key)
+
       start = time.time()
 
       handled_patients += 1
