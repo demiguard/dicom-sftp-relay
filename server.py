@@ -63,8 +63,8 @@ cpr_key = config['patient-id-key']
 anno_key = config['anno-name-key']
 remote_directory_name = config['remote-directory-name']
 
-df = get_cpr(Path(data_file), cpr_key)
-mapping = build_mapping(df, cpr_key, anno_key)
+patient_data_frame = get_cpr(Path(data_file), cpr_key)
+mapping = build_mapping(patient_data_frame, cpr_key, anno_key)
 
 ae = ApplicationEntity(ae_title=ae_title)
 ae.supported_contexts = AllStoragePresentationContexts + VerificationPresentationContexts
@@ -84,6 +84,8 @@ try:
 except OSError:
   pass
 
+sftp_client.close()
+
 def get_file_path_for_dataset(dataset: Dataset) -> Path:
   return Path(remote_directory_name) / str(dataset.PatientID) / (str(dataset.SOPInstanceUID) + '.dcm')
 
@@ -94,16 +96,20 @@ def handle_store(event):
     dataset: Dataset = event.dataset
     dataset.file_meta = event.file_meta
 
+    cpr = dataset.PatientID.value
+    anonymise_dataset(dataset)
+    if cpr not in mapping:
+       print(f"Patient ID: {dataset.PatientID} not in mapping")
+       return 0x0000
+
+    dataset.PatientID = mapping[cpr]
+
     dataset_path = get_file_path_for_dataset(dataset)
     try:
       sftp_client.mkdir(str(dataset_path.parent))
     except OSError:
       pass
 
-    anonymise_dataset(dataset)
-    if dataset.PatientID not in mapping:
-       print(f"Patient ID: {dataset.PatientID} not in mapping")
-       return 0x0000
 
     dataset.PatientID = mapping[dataset.PatientID]
 
@@ -128,6 +134,9 @@ def handle_store(event):
 
 def handle_open(event: evt.Event):
   print(f"Open assoc with {event.assoc.ae} ")
+
+def handle_close(event: evt.Event):
+  print(f"Closed assoc with {event.assoc.ae}")
 
 print(f"Opening server for ae: {ae_title}")
 

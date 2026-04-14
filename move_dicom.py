@@ -7,9 +7,14 @@ import datetime
 from pathlib import Path
 
 # Third party modules
+import time
+import numpy
+import paramiko
+from paramiko import client
 from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelMove # type: ignore
 
-from lib import get_cpr, get_ae, associate, get_baseline_query_dataset, get_config
+from lib import get_cpr, get_ae, associate, get_baseline_query_dataset,\
+  get_config, build_mapping
 
 required_config_keys = [
   'ae-title',
@@ -38,27 +43,107 @@ pacs_ae = config['pacs-ae']
 ae_title = config['ae-title']
 data_path = config['data-file']
 cpr_key = config['patient-id-key']
+anno_key = config['anno-name-key']
 server_ae = config['ae-title']
 
-patient_data = get_cpr(data_path, cpr_key)
+remote_directory = config['remote-directory-name']
+
+sftp_host     = config['sftp-host']
+sftp_port     = config['sftp-port']
+sftp_username = config['sftp-username']
+sftp_password = config['sftp-password']
+
+patient_data_frame = get_cpr(data_path, cpr_key)
 ae = get_ae(ae_title)
 
-with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
-  for x,y in patient_data.iterrows():
-    ds = get_baseline_query_dataset()
+mapping = build_mapping(patient_data_frame, cpr_key, anno_key)
 
-    ds.PatientID = getattr(y, cpr_key)
-    #ds.StudyDate = datetime.datetime.strptime(y.ct_date, "%Y-%m-%d")
-    if not assoc.is_established:
-      assoc = ae.associate(
-        PACS_IP,
-        PACS_PORT,
-        ae_title=PACS_AE
-      )
+handled_patients = 0
 
-    response = assoc.send_c_move(ds, server_ae, StudyRootQueryRetrieveInformationModelMove)
+ssh_client = client.SSHClient()
+ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    for (status, b) in response:
-      print(status)
+ssh_client.connect(
+  hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
+)
 
-    print(f"Moved {ds.PatientID}")
+def already_send(cpr):
+  serial_number = mapping[cpr]
+  path = f"{remote_directory}/{serial_number}"
+
+  sftp_client = ssh_client.open_sftp()
+
+  try:
+    try:
+      file_stat = sftp_client.stat(path)
+      return True
+    except FileNotFoundError:
+      return False
+  finally:
+     sftp_client.close()
+
+
+c_move_time = []
+
+try:
+  with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
+    for x, cpr in patient_data_frame.iterrows():
+      start = time.time()
+
+      handled_patients += 1
+      if already_send(cpr):
+        continue
+
+      ds = get_baseline_query_dataset()
+
+      ds.PatientID = getattr(cpr, cpr_key)
+      #ds.StudyDate = datetime.datetime.strptime(y.ct_date, "%Y-%m-%d")
+      if not assoc.is_established:
+        assoc = ae.associate(
+          PACS_IP,
+          PACS_PORT,
+          ae_title=PACS_AE
+        )
+      attempts = 0
+      while attempts < 5:
+        try:
+          response = assoc.send_c_move(ds, server_ae, StudyRootQueryRetrieveInformationModelMove)
+          for (status, b) in response:
+            pass
+
+          break
+        except Exception:
+          print("Failed to send re-etablishing")
+          attempts += 1
+          time.sleep( 2 ** attempts)
+
+          if not assoc.is_established:
+            assoc = ae.associate(
+              PACS_IP,
+              PACS_PORT,
+              ae_title=PACS_AE
+            )
+
+      end = time.time()
+
+      if attempts < 5:
+        print(f"Moved {cpr}")
+      else:
+        print(f"Failed {cpr}")
+
+
+      c_move_time.append(end - start)
+
+
+except Exception:
+  handled_patients = max(0, handled_patients - 1)
+  print("Unexpected exit! ")
+finally:
+  ssh_client.close()
+
+print(f"Finished {handled_patients}/{patient_data_frame.shape[0]}")
+if len(c_move_time):
+  numpy_c_move_time = numpy.array(c_move_time)
+  print(f"mean: {numpy_c_move_time.mean()}")
+  print(f"median: {numpy.median(numpy_c_move_time)}")
+  print(f"std dev: {numpy_c_move_time.std()}")
