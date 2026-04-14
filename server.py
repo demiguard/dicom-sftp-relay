@@ -4,7 +4,8 @@
 import argparse
 import json
 from io import BytesIO, IOBase
-import os
+import traceback
+
 import datetime
 from pathlib import Path
 
@@ -96,13 +97,13 @@ def handle_store(event):
     dataset: Dataset = event.dataset
     dataset.file_meta = event.file_meta
 
-    cpr = dataset.PatientID.value
+    cpr = dataset.PatientID
     anonymise_dataset(dataset)
     if cpr not in mapping:
        print(f"Patient ID: {dataset.PatientID} not in mapping")
        return 0x0000
-
     dataset.PatientID = mapping[cpr]
+
 
     dataset_path = get_file_path_for_dataset(dataset)
     try:
@@ -128,15 +129,16 @@ def handle_store(event):
     sftp_client.close()
   except Exception as e:
     print(f"Failed to store the dataset because: {e}")
+    print(traceback.format_exc())
     return 0xC000
 
   return 0x0000
 
 def handle_open(event: evt.Event):
-  print(f"Open assoc with {event.assoc.ae} ")
+  pass #print(f"Open assoc with {event.assoc.ae} ")
 
 def handle_close(event: evt.Event):
-  print(f"Closed assoc with {event.assoc.ae}")
+  pass #print(f"Closed assoc with {event.assoc.ae}")
 
 print(f"Opening server for ae: {ae_title}")
 
