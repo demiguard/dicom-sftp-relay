@@ -99,7 +99,7 @@ try:
 
       ds = get_baseline_query_dataset()
 
-      ds.PatientID = getattr(cpr, cpr_key)
+      ds.PatientID = cpr
       #ds.StudyDate = datetime.datetime.strptime(y.ct_date, "%Y-%m-%d")
       if not assoc.is_established:
         assoc = ae.associate(
