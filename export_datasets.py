@@ -1,5 +1,6 @@
 # Python standard library
 import argparse
+import stat
 from pathlib import Path
 
 # Third party modules
@@ -44,7 +45,7 @@ sftp_password = config["sftp-password"]
 ssh_client = client.SSHClient()
 ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-
+BASE_DIRECTORY = "ct_scan"
 
 ssh_client.connect(
   hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
@@ -52,9 +53,16 @@ ssh_client.connect(
 
 sftp_client = ssh_client.open_sftp()
 try:
-  directories = sftp_client.listdir(".")
+  directories = sftp_client.listdir(BASE_DIRECTORY)
 
-  print(directories)
+  for file_ in directories:
+    st_mode = sftp_client.lstat(f"{BASE_DIRECTORY}/{file_}").st_mode
+    if st_mode is None:
+      continue
+
+    print(file_, stat.S_ISDIR(st_mode))
+
+
 
 finally:
   sftp_client.close()
