@@ -52,7 +52,9 @@ ssh_client.connect(
 
 sftp_client = ssh_client.open_sftp()
 try:
-  sftp_client.listdir(".")
+  directories = sftp_client.listdir(".")
+
+  print(directories)
 
 finally:
   sftp_client.close()
