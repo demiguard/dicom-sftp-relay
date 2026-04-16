@@ -6,12 +6,14 @@ from pathlib import Path
 
 # Third party modules
 from pydicom import dcmread
+from pydicom.uid import CTImageStorage
 from pynetdicom.ae import ApplicationEntity
+from pynetdicom import debug_logger
 import paramiko
 from paramiko import client
 
 # My code
-from lib import get_config
+from lib import associate, get_config
 
 required_config_keys = [
   "sftp-host",
@@ -31,6 +33,9 @@ parser.add_argument('--verbose', '-v', action='store_true')
 
 args = parser.parse_args()
 
+if args.verbose:
+  debug_logger()
+
 config = get_config(args.config_path, required_config_keys)
 
 AE_TITLE = config['ae-title']
@@ -48,6 +53,10 @@ ssh_client = client.SSHClient()
 ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 BASE_DIRECTORY = "ct_scan"
+
+ae = ApplicationEntity(AE_TITLE)
+
+ae.add_requested_context(CTImageStorage)
 
 
 ssh_client.connect(
@@ -73,27 +82,31 @@ def yield_files(base: str):
 
 files_to_be_print = 5
 
-try:
-  files_printed = 0
+with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
+  if assoc.is_established:
+    print("I'm connected to PACS")
 
-  for file_path in yield_files(BASE_DIRECTORY):
-    print(file_path)
-    files_printed += 1
-    if files_to_be_print <= files_printed:
-      break
+    try:
+      files_printed = 0
 
-    dicom_image = BytesIO()
+      for file_path in yield_files(BASE_DIRECTORY):
+        print(file_path)
+        files_printed += 1
+        if files_to_be_print <= files_printed:
+          break
 
-
-    with sftp_client.open(file_path, 'rb') as file_pointer:
-      dcm = dcmread(file_pointer)
-
-    print(dcm)
+        dicom_image = BytesIO()
 
 
+        with sftp_client.open(file_path, 'rb') as file_pointer:
+          dcm = dcmread(file_pointer) #type: ignore # It works lolol
 
-finally:
-  sftp_client.close()
+        print(dcm)
+
+    finally:
+      sftp_client.close()
+  else:
+    print("I'm not connected to pacs!")
 
 
 ssh_client.close()
