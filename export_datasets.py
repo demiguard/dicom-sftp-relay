@@ -47,21 +47,38 @@ ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 BASE_DIRECTORY = "ct_scan"
 
+
 ssh_client.connect(
   hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
 )
-
 sftp_client = ssh_client.open_sftp()
-try:
-  directories = sftp_client.listdir(BASE_DIRECTORY)
+
+def yield_files(base: str):
+  directories = sftp_client.listdir(base)
 
   for file_ in directories:
-    st_mode = sftp_client.lstat(f"{BASE_DIRECTORY}/{file_}").st_mode
+    absolute_path = f"{base}/{file_}"
+    st_mode = sftp_client.lstat(absolute_path).st_mode
     if st_mode is None:
+      print(f"Skipping {file_} as its st_mode is None")
       continue
 
-    print(file_, stat.S_ISDIR(st_mode))
 
+    if stat.S_ISDIR(st_mode):
+      yield from yield_files(absolute_path)
+    else:
+      yield absolute_path
+
+files_to_be_print = 5
+
+try:
+  files_printed = 0
+
+  for a_file in yield_files(BASE_DIRECTORY):
+    print(a_file)
+    files_printed += 1
+    if files_to_be_print <= files_printed:
+      break
 
 
 finally:
