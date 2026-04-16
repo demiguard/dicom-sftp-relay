@@ -1,9 +1,11 @@
 # Python standard library
 import argparse
 import stat
+from io import BytesIO
 from pathlib import Path
 
 # Third party modules
+from pydicom import dcmread
 from pynetdicom.ae import ApplicationEntity
 import paramiko
 from paramiko import client
@@ -74,11 +76,20 @@ files_to_be_print = 5
 try:
   files_printed = 0
 
-  for a_file in yield_files(BASE_DIRECTORY):
-    print(a_file)
+  for file_path in yield_files(BASE_DIRECTORY):
+    print(file_path)
     files_printed += 1
     if files_to_be_print <= files_printed:
       break
+
+    dicom_image = BytesIO()
+
+
+    with sftp_client.open(file_path, 'rb') as file_pointer:
+      dcm = dcmread(file_pointer)
+
+    print(dcm)
+
 
 
 finally:
