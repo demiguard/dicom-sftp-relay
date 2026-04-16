@@ -1,11 +1,13 @@
-
+# Python standard library
 import argparse
 from pathlib import Path
 
-
+# Third party modules
+from pynetdicom.ae import ApplicationEntity
 import paramiko
 from paramiko import client
 
+# My code
 from lib import get_config
 
 required_config_keys = [
@@ -28,6 +30,8 @@ args = parser.parse_args()
 
 config = get_config(args.config_path, required_config_keys)
 
+AE_TITLE = config['ae-title']
+
 pacs_ip = config['pacs-ip']
 pacs_port = config['pacs-port']
 pacs_ae = config['pacs-ae']
@@ -40,11 +44,18 @@ sftp_password = config["sftp-password"]
 ssh_client = client.SSHClient()
 ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
+
+
 ssh_client.connect(
   hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
 )
 
+sftp_client = ssh_client.open_sftp()
+try:
+  sftp_client.listdir(".")
 
+finally:
+  sftp_client.close()
 
 
 ssh_client.close()
