@@ -9,7 +9,7 @@ from paramiko import client
 from lib import get_config
 
 required_config_keys = [
-  "sftp-ip",
+  "sftp-host",
   "sftp-port",
   "sftp-username",
   "sftp-password",
