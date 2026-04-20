@@ -70,28 +70,19 @@ ssh_client.connect(
   hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
 )
 
+sftp_client = ssh_client.open_sftp()
+
+existing_patients = set(sftp_client.listdir(remote_directory))
+sftp_client.close()
+ssh_client.close()
+
+
+
 
 def already_send(cpr):
   serial_number = mapping[cpr]
-  path = f"{remote_directory}/{serial_number}"
 
-  while True :
-    try:
-      sftp_client = ssh_client.open_sftp()
-      try:
-
-        try:
-          file_stat = sftp_client.stat(path)
-          return True
-        except FileNotFoundError:
-          return False
-      finally:
-        sftp_client.close()
-    except paramiko.SSHException:
-      ssh_client.connect(
-        hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
-      )
-
+  return serial_number in existing_patients
 
 c_move_time = []
 
@@ -104,6 +95,7 @@ try:
 
       handled_patients += 1
       if already_send(cpr):
+        print(f"Found {cpr}")
         continue
 
       ds = get_baseline_query_dataset()
@@ -151,8 +143,6 @@ except Exception as E:
   handled_patients = max(0, handled_patients - 1)
   print(f"Unexpected exit! - {E}")
   print(traceback.format_exc())
-finally:
-  ssh_client.close()
 
 print(f"Finished {handled_patients}/{patient_data_frame.shape[0]}")
 if len(c_move_time):
