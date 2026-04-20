@@ -64,28 +64,33 @@ handled_patients = 0
 ssh_client = client.SSHClient()
 ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
+
+
 ssh_client.connect(
   hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
 )
 
+
 def already_send(cpr):
   serial_number = mapping[cpr]
   path = f"{remote_directory}/{serial_number}"
-  ssh_client.connect(
-    hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
-  )
 
-  sftp_client = ssh_client.open_sftp()
-
-  try:
+  while True :
     try:
-      file_stat = sftp_client.stat(path)
-      return True
-    except FileNotFoundError:
-      return False
-  finally:
-     sftp_client.close()
-     ssh_client.close()
+      sftp_client = ssh_client.open_sftp()
+      try:
+
+        try:
+          file_stat = sftp_client.stat(path)
+          return True
+        except FileNotFoundError:
+          return False
+      finally:
+        sftp_client.close()
+    except paramiko.SSHException:
+      ssh_client.connect(
+        hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
+      )
 
 
 c_move_time = []
@@ -152,6 +157,6 @@ finally:
 print(f"Finished {handled_patients}/{patient_data_frame.shape[0]}")
 if len(c_move_time):
   numpy_c_move_time = numpy.array(c_move_time)
-  print(f"mean: {numpy_c_move_time.mean()}")
-  print(f"median: {numpy.median(numpy_c_move_time)}")
-  print(f"std dev: {numpy_c_move_time.std()}")
+  print(f"mean: {numpy_c_move_time.mean()} s")
+  print(f"median: {numpy.median(numpy_c_move_time)} s")
+  print(f"std dev: {numpy_c_move_time.std()} ")
