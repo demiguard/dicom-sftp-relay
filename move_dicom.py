@@ -71,6 +71,9 @@ ssh_client.connect(
 def already_send(cpr):
   serial_number = mapping[cpr]
   path = f"{remote_directory}/{serial_number}"
+  ssh_client.connect(
+    hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
+  )
 
   sftp_client = ssh_client.open_sftp()
 
@@ -82,6 +85,7 @@ def already_send(cpr):
       return False
   finally:
      sftp_client.close()
+     ssh_client.close()
 
 
 c_move_time = []
