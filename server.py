@@ -78,7 +78,22 @@ ssh_client.connect(
   hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
 )
 
-sftp_client = ssh_client.open_sftp()
+def get_sftp():
+  attempts = 0
+  while True:
+    try:
+      return ssh_client.open_sftp()
+    except paramiko.SSHException:
+      ssh_client.connect(
+        hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
+      )
+      attempts += 1
+    if 10 < attempts:
+      print("COULD NOT RESTABLISH SFTP!")
+      exit(1)
+
+
+sftp_client = get_sftp()
 
 try:
   sftp_client.mkdir(remote_directory_name)
@@ -92,7 +107,7 @@ def get_file_path_for_dataset(dataset: Dataset) -> Path:
 
 def handle_store(event):
   try:
-    sftp_client = ssh_client.open_sftp()
+    sftp_client = sftp_client = get_sftp()
     event_start_time = datetime.datetime.now()
     dataset: Dataset = event.dataset
     dataset.file_meta = event.file_meta
