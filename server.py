@@ -82,7 +82,10 @@ def get_sftp():
   attempts = 0
   while True:
     try:
-      return ssh_client.open_sftp()
+      return_value = ssh_client.open_sftp()
+      if return_value is None:
+        raise paramiko.SSHException
+      return return_value
     except paramiko.SSHException:
       ssh_client.connect(
         hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password
