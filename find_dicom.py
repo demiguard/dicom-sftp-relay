@@ -14,7 +14,8 @@ from lib import get_cpr, get_ae, associate, get_baseline_query_dataset, get_conf
 required_config_keys = [
   'ae-title',
   'data-file',
-  'patient-id-key'
+  'patient-id-key',
+  'sep'
 ]
 
 
@@ -39,7 +40,7 @@ ae_title = config['ae-title']
 data_path = config['data-file']
 cpr_key = config['patient-id-key']
 
-patient_data = get_cpr(data_path, cpr_key)
+patient_data = get_cpr(data_path, cpr_key, sep=config['sep'])
 ae = get_ae(ae_title)
 
 max_queries = 500
@@ -50,9 +51,9 @@ queries = 0
 with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
   for x,y in patient_data.iterrows():
     ds = get_baseline_query_dataset()
-    ds.PatientID = y[cpr_key]
-    ds.Modality = 'CT'
-
+    ds.PatientID = "".join(y[cpr_key].split('-'))
+    if 'accession-key' in config:
+      ds.AccessionNumber = y[config['accession-key']]
 
     if queries == 0:
         print(ds)
