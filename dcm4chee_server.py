@@ -40,9 +40,9 @@ parser.add_argument('config', type=Path, help="Path to json file with all the co
 args = parser.parse_args()
 
 config = lib.get_config(args.config, [
-  'pacs-ip',
-  'pacs-port',
-  'pacs-ae',
+  'dcm-ip',
+  'dcm-port',
+  'dcm-ae',
   'data-file',
   'ae-title',
   'port'
@@ -59,9 +59,9 @@ for x, row in data_frame.iterrows():
   mapping[cpr] = row['Anonymized_Exam_ID_CT']
 
 address = Address(
-  config['pacs-ip'],
-  config['pacs-port'],
-  config['pacs-ae']
+  config['dcm-ip'],
+  config['dcm-port'],
+  config['dcm-ae']
 )
 
 
