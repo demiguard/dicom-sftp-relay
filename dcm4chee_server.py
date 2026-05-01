@@ -48,12 +48,12 @@ config = lib.get_config(args.config, [
   'port'
 ])
 
-data_frame = lib.get_cpr(config['data-file'], 'Personnummer')
+data_frame = lib.get_cpr(config['data-file'], 'Personnummer',',')
 
 mapping = {}
 
 for x, row in data_frame.iterrows():
-  dashed_cpr: str = row['Personnummer']
+  dashed_cpr: str = row.get('Personnummer')
   cpr = "".join(dashed_cpr.split('-'))
 
   mapping[cpr] = row['Anonymized_Exam_ID_CT']
@@ -138,4 +138,5 @@ class AnnoPipeline(DaemonPipeline):
 
 if __name__ == '__main__':
   pipeline = AnnoPipeline()
+  print("Opening THE SERVER")
   pipeline.open()

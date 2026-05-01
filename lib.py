@@ -18,11 +18,9 @@ PACS_IP = "10.145.5.63"
 PACS_PORT = 7840
 PACS_AE = "DICOM_QR_SCP"
 
-def get_cpr(data_path: Path, cpr_key):
-  if str(data_path).endswith('tsv'):
-    return pandas.read_csv(data_path, sep='\t', dtype={ cpr_key : str })
-  else:
-    return pandas.read_csv(data_path, sep=';',  dtype={ cpr_key : str })
+def get_cpr(data_path: Path, cpr_key, sep='\t'):
+  return pandas.read_csv(data_path, sep=sep, dtype={ cpr_key : str })
+
 
 
 def get_ae(AE_TITLE):
