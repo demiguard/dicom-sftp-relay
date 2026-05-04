@@ -143,7 +143,10 @@ def find_uids(assoc: Association, dataset_generator: Iterable[Dataset]):
     for status, found_dataset in response:
       if found_dataset is not None:
         found_uids[found_dataset.PatientID].append((found_dataset.StudyInstanceUID, found_dataset.SeriesInstanceUID))
-
+        print("\n")
+        print(dataset)
+        print("\n")
         print(found_dataset)
+        print("\n")
 
   return found_uids
