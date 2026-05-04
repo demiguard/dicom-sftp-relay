@@ -47,7 +47,7 @@ ae_title = config['ae-title']
 data_path = config['data-file']
 cpr_key = config['patient-id-key']
 server_ae = config['ae-title']
-accession_key = config['accession_key'] if 'accession-key' in config else None
+accession_key = config['accession-key'] if 'accession-key' in config else None
 
 patient_data_frame = get_cpr(data_path, cpr_key, config['sep'])
 ae = get_ae(ae_title)
