@@ -67,83 +67,55 @@ query_generator = lib.QueryDatasetGenerator(patient_data_frame, cpr_key, accessi
 
 completed_study_uids = set()
 
-try:
-  with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
-    uids = lib.find_uids(assoc, query_generator)
 
+with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
+  uids = lib.find_uids(assoc, query_generator)
 
+for ds in query_generator:
+  handled_patients += 1
 
-    for ds in query_generator:
-      handled_patients += 1
+  for study_uid, series_uid in uids[ds.PatientID]:
+    start = time.time()
 
-      for study_uid, series_uid in uids[ds.PatientID]:
-        start = time.time()
+    completed_study_uids.add(study_uid)
 
-        if study_uid in completed_study_uids:
-          continue
+    ds.StudyInstanceUID = study_uid
+    ds.SeriesInstanceUID = series_uid
 
-        completed_study_uids.add(study_uid)
+    attempts = 0
 
-        ds.StudyInstanceUID = study_uid
+    with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
+      response = assoc.send_c_move(ds, server_ae, StudyRootQueryRetrieveInformationModelMove)
+      accepted_datasets = 0
+      failed_datasets = 0
+      for (status, b) in response:
+        if args.verbose:
+          print(status)
 
+        if 0x0000_1021 in status:
+          accepted_datasets = status[0x0000_1021].value
 
-        if not assoc.is_established:
-          assoc = ae.associate(
-            PACS_IP,
-            PACS_PORT,
-            ae_title=PACS_AE
-          )
-        attempts = 0
-        while attempts < 5:
-          try:
-            response = assoc.send_c_move(ds, server_ae, StudyRootQueryRetrieveInformationModelMove)
-            accepted_datasets = 0
-            failed_datasets = 0
-            for (status, b) in response:
-              if args.verbose:
-                print(status)
+        if 0x0000_1022 in status:
+          failed_datasets = status[0x0000_1022].value
 
-              if 0x0000_1021 in status:
-                accepted_datasets = status[0x0000_1021].value
+      if failed_datasets > 0:
+        print(f"Failed to send {failed_datasets} for {ds.PatientID}")
 
-              if 0x0000_1022 in status:
-                failed_datasets = status[0x0000_1022].value
+      if accepted_datasets < 100:
+        print(ds)
+        print(f"Somehow we only found {accepted_datasets} for {ds.PatientID}")
 
-            if failed_datasets > 0:
-              print(f"Failed to send {failed_datasets} for {ds.PatientID}")
+    end = time.time()
 
-            if accepted_datasets < 100:
-              print(ds)
-              print(f"Somehow we only found {accepted_datasets} for {ds.PatientID}")
+    if attempts < 5:
+      print(f"Moved {ds.PatientID}")
+    else:
+      print(f"Failed {ds.PatientID}")
 
-            break
-          except Exception:
-            print("Failed to send re-etablishing")
-            attempts += 1
-            time.sleep( 2 ** attempts)
+    c_move_time.append(end - start)
+  if handled_patients >= datasets_to_handle:
+      break
 
-            if not assoc.is_established:
-              assoc = ae.associate(
-                PACS_IP,
-                PACS_PORT,
-                ae_title=PACS_AE
-              )
-
-        end = time.time()
-
-        if attempts < 5:
-          print(f"Moved {ds.PatientID}")
-        else:
-          print(f"Failed {ds.PatientID}")
-
-        c_move_time.append(end - start)
-      if handled_patients >= datasets_to_handle:
-          break
-
-except Exception as E:
-  handled_patients = max(0, handled_patients - 1)
-  print(f"Unexpected exit! - {E}")
-  print(traceback.format_exc())
 
 print(f"Finished {handled_patients}/{patient_data_frame.shape[0]}")
 if len(c_move_time):
