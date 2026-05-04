@@ -65,6 +65,8 @@ def map_cpr(cpr: str):
 
 query_generator = lib.QueryDatasetGenerator(patient_data_frame, cpr_key, accession_key)
 
+completed_study_uids = set()
+
 try:
   with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
     uids = lib.find_uids(assoc, query_generator)
@@ -72,6 +74,11 @@ try:
     for ds in query_generator:
       for study_uid, series_uid in uids[ds.PatientID]:
         start = time.time()
+
+        if study_uid in completed_study_uids:
+          continue
+
+        completed_study_uids.add(study_uid)
 
         ds.StudyInstanceUID = study_uid
 
