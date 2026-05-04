@@ -101,10 +101,12 @@ def safe_del(dataset: Dataset, tag):
   if tag in dataset:
     del dataset[tag]
 
-def anonymise_dataset(dataset: Dataset):
+def purge_patient_information(dataset: Dataset):
   safe_del(dataset, 0x0010_0010)
   safe_del(dataset, 0x0010_1040)
   safe_del(dataset, 0x0010_1002)
+  safe_del(dataset, 0x0010_0021)
+  safe_del(dataset, 0x0010_0024)
 
 def map_cpr(cpr: str):
   return "".join(cpr.split('-'))

@@ -120,6 +120,8 @@ class AnnoProcessor(AbstractProcessor):
           new_series_id = gen_uid()
 
           for ds in series:
+            lib.purge_patient_information(ds)
+
             ds.SOPInstanceUID = gen_uid()
             ds.SeriesInstanceUID = new_series_id
             ds.StudyInstanceUID = new_study_id
@@ -133,6 +135,7 @@ class AnnoProcessor(AbstractProcessor):
 
             datasets.append(ds)
 
+    print(f"Sending {len(datasets)} to dcm4chee")
 
     return DicomOutput([(address, datasets)], config['ae-title'])
 

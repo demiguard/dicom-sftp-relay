@@ -24,7 +24,7 @@ from pynetdicom.ae import ApplicationEntity
 from pynetdicom.presentation import AllStoragePresentationContexts, VerificationPresentationContexts
 
 # Internal modules
-from lib import get_config, build_mapping, get_cpr, anonymise_dataset
+from lib import get_config, build_mapping, get_cpr, purge_patient_information
 
 # Parsing
 required_config_keys = [
@@ -116,7 +116,7 @@ def handle_store(event):
     dataset.file_meta = event.file_meta
 
     cpr = dataset.PatientID
-    anonymise_dataset(dataset)
+    purge_patient_information(dataset)
     if cpr not in mapping:
        print(f"Patient ID: {dataset.PatientID} not in mapping")
        return 0x0000
