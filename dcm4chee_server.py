@@ -10,6 +10,7 @@ from typing import List, Iterable, Tuple
 # Third party modules
 from pydicom import Dataset
 from pandas import read_csv
+from pynetdicom import debug_logger
 
 # Dicomnode
 try:
@@ -36,8 +37,12 @@ import lib
 #### ARGUMENTS ####
 parser = argparse.ArgumentParser()
 parser.add_argument('config', type=Path, help="Path to json file with all the config")
+parser.add_argument('--verbose', '-v', action='store_true')
 
 args = parser.parse_args()
+
+if args.verbose:
+  debug_logger()
 
 config = lib.get_config(args.config, [
   'dcm-ip',
@@ -128,6 +133,7 @@ class AnnoPipeline(DaemonPipeline):
   Processor = AnnoProcessor
 
   log_output = "anno_pipeline.log"
+  require_called_aet = False
 
   ae_title = config['ae-title']
   port = config['port']
