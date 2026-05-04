@@ -10,6 +10,7 @@ import traceback
 # Third party modules
 import time
 import numpy
+from pynetdicom import debug_logger
 from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelMove # type: ignore
 
 from lib import get_cpr, get_ae, associate, get_baseline_query_dataset,\
@@ -31,6 +32,7 @@ parser = argparse.ArgumentParser("find_dicom", usage="move_dicom config.json", )
 
 parser.add_argument('config_path', help="Path to config", type=Path)
 parser.add_argument('--max-datasets', '-md', default=0, type=int)
+parser.add_argument('--verbose', '-v', action='store_true')
 
 args = parser.parse_args()
 
@@ -52,6 +54,9 @@ datasets_to_handle = args.max_datasets if args.max_datasets > 0 else patient_dat
 handled_patients = 0
 
 c_move_time = []
+
+if args.verbose:
+  debug_logger()
 
 try:
   with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
