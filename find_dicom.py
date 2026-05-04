@@ -27,8 +27,8 @@ parser.add_argument('--verbose', '-v', action='store_true')
 
 args = parser.parse_args()
 
-if args.verbose:
-  debug_logger()
+#if args.verbose:
+#  debug_logger()
 
 config = get_config(args.config_path, required_config_keys)
 
@@ -55,6 +55,7 @@ with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
     if 'accession-key' in config:
       ds.AccessionNumber = y[config['accession-key']]
 
+
     if queries == 0:
         print(ds)
 
@@ -69,6 +70,9 @@ with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
     for (status, b) in response:
       if b is not None:
         has_found = True
+        if args.verbose:
+           print(b)
+
     if has_found:
       found += 1
 

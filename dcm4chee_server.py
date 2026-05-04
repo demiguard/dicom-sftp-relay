@@ -92,7 +92,12 @@ class HungryInput(AbstractInput):
 
 
   def validate(self) -> bool:
-    return self.deadline < datetime.now() - self.last_added_image
+    time_since_last_dataset = datetime.now() - self.last_added_image
+    valid = self.deadline < time_since_last_dataset
+
+    self.logger.info(f"{self.deadline} < {time_since_last_dataset}: { valid }")
+
+    return valid
 
 
 class AnnoProcessor(AbstractProcessor):
