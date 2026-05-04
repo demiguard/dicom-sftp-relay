@@ -70,8 +70,11 @@ with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
     for (status, b) in response:
       if b is not None:
         has_found = True
-        if args.verbose:
-           print(b)
+        if args.verbose and 'accession-key' in config:
+          #print(b)
+          print(b.AccessionNumber, y[config['accession-key']])
+
+
 
     if has_found:
       found += 1
