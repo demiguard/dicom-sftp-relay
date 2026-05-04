@@ -55,6 +55,7 @@ with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
     if 'accession-key' in config:
       ds.AccessionNumber = y[config['accession-key']]
 
+    ds.SeriesInstanceUID = None
 
     if queries == 0:
         print(ds)
@@ -73,7 +74,7 @@ with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
         if args.verbose and 'accession-key' in config:
           #print(b)
           if b.AccessionNumber == y[config['accession-key']]:
-            print(b.StudyInstanceUID)
+            print(b.SeriesInstanceUID)
 
 
 

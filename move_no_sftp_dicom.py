@@ -73,6 +73,11 @@ try:
       if 'accession-key' in config:
         ds.AccessionNumber = row[config['accession-key']]
       #ds.StudyDate = datetime.datetime.strptime(y.ct_date, "%Y-%m-%d")
+
+
+      if handled_patients == 1:
+        print(ds)
+
       if not assoc.is_established:
         assoc = ae.associate(
           PACS_IP,
@@ -83,8 +88,23 @@ try:
       while attempts < 5:
         try:
           response = assoc.send_c_move(ds, server_ae, StudyRootQueryRetrieveInformationModelMove)
+          accepted_datasets = 0
+          failed_datasets = 0
           for (status, b) in response:
-            print(status, b)
+            if args.verbose:
+              print(status)
+
+            if 0x0000_1021 in status:
+              accepted_datasets = status[0x0000_1021].value
+
+            if 0x0000_1022 in status:
+              failed_datasets = status[0x0000_1022].value
+
+          if failed_datasets > 0:
+            print(f"Failed to send {failed_datasets} for {cpr}")
+
+          if accepted_datasets < 100:
+            print(f"Somehow we only found {accepted_datasets} for {cpr}")
 
           break
         except Exception:
