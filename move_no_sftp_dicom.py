@@ -74,7 +74,7 @@ try:
         start = time.time()
 
         ds.StudyInstanceUID = study_uid
-        ds.SeriesInstanceUID = series_uid
+
 
         if not assoc.is_established:
           assoc = ae.associate(
@@ -102,6 +102,7 @@ try:
               print(f"Failed to send {failed_datasets} for {ds.PatientID}")
 
             if accepted_datasets < 100:
+              print(ds)
               print(f"Somehow we only found {accepted_datasets} for {ds.PatientID}")
 
             break
