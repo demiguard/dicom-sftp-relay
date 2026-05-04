@@ -71,7 +71,10 @@ try:
   with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
     uids = lib.find_uids(assoc, query_generator)
 
+
+
     for ds in query_generator:
+      break
       for study_uid, series_uid in uids[ds.PatientID]:
         start = time.time()
 
@@ -135,7 +138,6 @@ try:
         c_move_time.append(end - start)
         if handled_patients >= datasets_to_handle:
           break
-
 
 except Exception as E:
   handled_patients = max(0, handled_patients - 1)
