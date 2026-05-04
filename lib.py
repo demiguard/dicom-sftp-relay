@@ -2,13 +2,16 @@
 import contextlib
 import json
 from pathlib import Path
-from typing import Generator, List
+from typing import Dict, Iterable, Generator, List, Set, Tuple
 
 
 # Third party
 import pandas
 
+from dicomnode.data_structures.defaulting_dict import DefaultingDict
+
 from pydicom import Dataset
+from pydicom.uid import UID
 from pynetdicom.association import Association
 from pynetdicom.ae import ApplicationEntity as AE
 from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelMove, StudyRootQueryRetrieveInformationModelFind # type: ignore
@@ -101,3 +104,43 @@ def anonymise_dataset(dataset: Dataset):
   safe_del(dataset, 0x0010_0010)
   safe_del(dataset, 0x0010_1040)
   safe_del(dataset, 0x0010_1002)
+
+def map_cpr(cpr: str):
+  return "".join(cpr.split('-'))
+
+class QueryDatasetGenerator:
+  def __init__(self, dataframe: pandas.DataFrame, cpr_key, accession_key = None, study_date_key = None) -> None:
+    self.dataframe = dataframe
+    self.cpr_key = cpr_key
+    self.accession_key = accession_key
+    self.study_date_key = study_date_key
+
+  def __iter__(self):
+    for x, row in self.dataframe.iterrows():
+      ds = get_baseline_query_dataset()
+
+      ds.PatientID = map_cpr(row[self.cpr_key])
+
+      if self.accession_key is not None:
+        ds.AccessionNumber = row[self.accession_key]
+
+      if self.study_date_key is not None:
+        ds.StudyDate = row[self.study_date_key]
+
+      yield ds
+
+
+def create_list():
+  return list()
+
+def find_uids(assoc: Association, dataset_generator: Iterable[Dataset]):
+  found_uids: DefaultingDict[str, List[Tuple[UID, UID]]] = DefaultingDict(create_list)
+
+  for dataset in dataset_generator:
+    response = assoc.send_c_find(dataset, StudyRootQueryRetrieveInformationModelFind)
+
+    for status, found_dataset in response:
+      if found_dataset is not None:
+        found_uids[found_dataset.PatientID].append((found_dataset.StudyInstanceUID, found_dataset.SeriesInstanceUID))
+
+  return found_uids

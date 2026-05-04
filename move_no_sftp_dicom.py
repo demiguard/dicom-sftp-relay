@@ -15,6 +15,7 @@ from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelMove # ty
 
 from lib import get_cpr, get_ae, associate, get_baseline_query_dataset,\
   get_config, build_mapping
+import lib
 
 required_config_keys = [
   'ae-title',
@@ -46,6 +47,7 @@ ae_title = config['ae-title']
 data_path = config['data-file']
 cpr_key = config['patient-id-key']
 server_ae = config['ae-title']
+accession_key = config['accession_key'] if 'accession-key' in config else None
 
 patient_data_frame = get_cpr(data_path, cpr_key, config['sep'])
 ae = get_ae(ae_title)
@@ -58,77 +60,73 @@ c_move_time = []
 if args.verbose:
   debug_logger()
 
+def map_cpr(cpr: str):
+  return "".join(cpr)
+
+query_generator = lib.QueryDatasetGenerator(patient_data_frame, cpr_key, accession_key)
+
 try:
   with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
-    for x, row in patient_data_frame.iterrows():
-      cpr = getattr(row, cpr_key)
+    uids = lib.find_uids(assoc, query_generator)
 
-      start = time.time()
+    for ds in query_generator:
+      for study_uid, series_uid in uids[ds.PatientID]:
+        start = time.time()
 
-      handled_patients += 1
+        ds.StudyInstanceUID = study_uid
+        ds.SeriesInstanceUID = series_uid
 
-      ds = get_baseline_query_dataset()
+        if not assoc.is_established:
+          assoc = ae.associate(
+            PACS_IP,
+            PACS_PORT,
+            ae_title=PACS_AE
+          )
+        attempts = 0
+        while attempts < 5:
+          try:
+            response = assoc.send_c_move(ds, server_ae, StudyRootQueryRetrieveInformationModelMove)
+            accepted_datasets = 0
+            failed_datasets = 0
+            for (status, b) in response:
+              if args.verbose:
+                print(status)
 
-      ds.PatientID = "".join(cpr.split('-'))
-      if 'accession-key' in config:
-        ds.AccessionNumber = row[config['accession-key']]
-      #ds.StudyDate = datetime.datetime.strptime(y.ct_date, "%Y-%m-%d")
+              if 0x0000_1021 in status:
+                accepted_datasets = status[0x0000_1021].value
 
+              if 0x0000_1022 in status:
+                failed_datasets = status[0x0000_1022].value
 
-      if handled_patients == 1:
-        print(ds)
+            if failed_datasets > 0:
+              print(f"Failed to send {failed_datasets} for {ds.PatientID}")
 
-      if not assoc.is_established:
-        assoc = ae.associate(
-          PACS_IP,
-          PACS_PORT,
-          ae_title=PACS_AE
-        )
-      attempts = 0
-      while attempts < 5:
-        try:
-          response = assoc.send_c_move(ds, server_ae, StudyRootQueryRetrieveInformationModelMove)
-          accepted_datasets = 0
-          failed_datasets = 0
-          for (status, b) in response:
-            if args.verbose:
-              print(status)
+            if accepted_datasets < 100:
+              print(f"Somehow we only found {accepted_datasets} for {ds.PatientID}")
 
-            if 0x0000_1021 in status:
-              accepted_datasets = status[0x0000_1021].value
+            break
+          except Exception:
+            print("Failed to send re-etablishing")
+            attempts += 1
+            time.sleep( 2 ** attempts)
 
-            if 0x0000_1022 in status:
-              failed_datasets = status[0x0000_1022].value
+            if not assoc.is_established:
+              assoc = ae.associate(
+                PACS_IP,
+                PACS_PORT,
+                ae_title=PACS_AE
+              )
 
-          if failed_datasets > 0:
-            print(f"Failed to send {failed_datasets} for {cpr}")
+        end = time.time()
 
-          if accepted_datasets < 100:
-            print(f"Somehow we only found {accepted_datasets} for {cpr}")
+        if attempts < 5:
+          print(f"Moved {ds.PatientID}")
+        else:
+          print(f"Failed {ds.PatientID}")
 
+        c_move_time.append(end - start)
+        if handled_patients >= datasets_to_handle:
           break
-        except Exception:
-          print("Failed to send re-etablishing")
-          attempts += 1
-          time.sleep( 2 ** attempts)
-
-          if not assoc.is_established:
-            assoc = ae.associate(
-              PACS_IP,
-              PACS_PORT,
-              ae_title=PACS_AE
-            )
-
-      end = time.time()
-
-      if attempts < 5:
-        print(f"Moved {cpr}")
-      else:
-        print(f"Failed {cpr}")
-
-      c_move_time.append(end - start)
-      if handled_patients >= datasets_to_handle:
-        break
 
 
 except Exception as E:
