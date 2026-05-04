@@ -55,6 +55,7 @@ def get_baseline_query_dataset():
   #ds.Modality = "CT"
 
   ds.StudyInstanceUID = ''
+  ds.SeriesInstanceUID = ''
   ds.StudyDate = ''
   ds.StudyTime = ''
   ds.AccessionNumber = ''
