@@ -72,7 +72,8 @@ with associate(ae, pacs_ip, pacs_port, pacs_ae) as assoc:
         has_found = True
         if args.verbose and 'accession-key' in config:
           #print(b)
-          print(b.AccessionNumber, y[config['accession-key']])
+          if b.AccessionNumber == y[config['accession-key']]:
+            print(b.StudyInstanceUID)
 
 
 
