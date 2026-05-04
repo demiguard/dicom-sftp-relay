@@ -30,7 +30,7 @@ PACS_AE = "DICOM_QR_SCP"
 parser = argparse.ArgumentParser("find_dicom", usage="move_dicom config.json", )
 
 parser.add_argument('config_path', help="Path to config", type=Path)
-parser.add_argument('--max-datasets', '-md', default=0)
+parser.add_argument('--max-datasets', '-md', default=0, type=int)
 
 args = parser.parse_args()
 
