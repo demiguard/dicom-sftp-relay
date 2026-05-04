@@ -58,7 +58,9 @@ data_frame = lib.get_cpr(config['data-file'], 'Personnummer',',')
 mapping = {}
 
 for x, row in data_frame.iterrows():
-  dashed_cpr: str = row.get('Personnummer')
+  dashed_cpr: str | None = row.get('Personnummer')
+  if dashed_cpr is None:
+    continue
   cpr = "".join(dashed_cpr.split('-'))
 
   mapping[cpr] = row['Anonymized_Exam_ID_CT']
