@@ -133,7 +133,7 @@ class AnnoProcessor(AbstractProcessor):
 
 class AnnoPipeline(DaemonPipeline):
   Processor = AnnoProcessor
-
+  ip = "0.0.0.0"
   log_output = "anno_pipeline.log"
   require_called_aet = False
 
