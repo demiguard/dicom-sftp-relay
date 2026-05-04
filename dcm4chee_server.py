@@ -146,5 +146,5 @@ class AnnoPipeline(DaemonPipeline):
 
 if __name__ == '__main__':
   pipeline = AnnoPipeline()
-  print("Opening THE SERVER")
+  print(f"Opening THE SERVER - verbose: {args.verbose}")
   pipeline.open()
