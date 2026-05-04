@@ -30,6 +30,7 @@ PACS_AE = "DICOM_QR_SCP"
 parser = argparse.ArgumentParser("find_dicom", usage="move_dicom config.json", )
 
 parser.add_argument('config_path', help="Path to config", type=Path)
+parser.add_argument('--max-datasets', '-md', default=0)
 
 args = parser.parse_args()
 
@@ -47,6 +48,7 @@ server_ae = config['ae-title']
 patient_data_frame = get_cpr(data_path, cpr_key, config['sep'])
 ae = get_ae(ae_title)
 
+datasets_to_handle = args.max_datasets if args.max_datasets > 0 else patient_data_frame.shape[0]
 handled_patients = 0
 
 c_move_time = []
@@ -100,6 +102,8 @@ try:
         print(f"Failed {cpr}")
 
       c_move_time.append(end - start)
+      if handled_patients >= datasets_to_handle:
+        break
 
 
 except Exception as E:
