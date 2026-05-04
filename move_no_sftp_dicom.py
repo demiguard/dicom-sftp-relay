@@ -74,7 +74,8 @@ try:
 
 
     for ds in query_generator:
-      break
+      handled_patients += 1
+
       for study_uid, series_uid in uids[ds.PatientID]:
         start = time.time()
 
@@ -136,7 +137,7 @@ try:
           print(f"Failed {ds.PatientID}")
 
         c_move_time.append(end - start)
-        if handled_patients >= datasets_to_handle:
+      if handled_patients >= datasets_to_handle:
           break
 
 except Exception as E:
